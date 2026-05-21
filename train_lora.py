@@ -24,7 +24,7 @@ def main():
         device_map="auto", 
         quantization_config=quant_config,
         trust_remote_code=True,
-        attn_implementation="sdpa"  # 避免缺少 flash-attn 库导致的报错，使用 PyTorch 原生高效注意力
+        attn_implementation="eager"  # 强制回退使用 eager 模式，解决不支持 sdpa 的问题
     )
 
     # Kaggle 强制要求 max rank 32
