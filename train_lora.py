@@ -42,19 +42,35 @@ def main():
     class MTCustomTrainer(Trainer):
         def compute_loss(self, model, inputs, return_outputs=False):
             # 获取正常的交叉熵 loss
-            outputs = model(**inputs)
+            outputs = model(**inputs, output_hidden_states=True)
             base_loss = outputs.loss
             
-            # TODO: 提取隐含层，加上量子或者波函数约束的正则化损失（从 mt_physics_loss 中计算）
-            # hidden_states = outputs.hidden_states
-            # mt_penalty = custom_mt_loss(hidden_states, outputs.logits)
-            mt_penalty = 0.0 # Placeholder
+            # 提取隐含层，加上量子或者波函数约束的正则化损失（从 mt_physics_loss 中计算）
+            # 使用最后一层隐藏状态作为代表
+            if hasattr(outputs, 'hidden_states') and outputs.hidden_states is not None:
+                hidden_states = outputs.hidden_states[-1]
+                mt_penalty = custom_mt_loss(hidden_states)
+            else:
+                mt_penalty = 0.0
             
             total_loss = base_loss + mt_penalty
             return (total_loss, outputs) if return_outputs else total_loss
 
-    # TODO: 载入你针对数学/推理清洗出的数据集
-    train_dataset = [] 
+    # 载入针对数学/推理清洗出的数据集
+    from datasets import load_dataset
+    print("Loading prepared dataset...")
+    try:
+        raw_dataset = load_dataset("json", data_files="train_math.jsonl", split="train")
+        
+        def tokenize_function(examples):
+            # 将 messages 转换为 token
+            texts = [tokenizer.apply_chat_template(msg, tokenize=False) for msg in examples["messages"]]
+            return tokenizer(texts, padding="max_length", truncation=True, max_length=1024)
+            
+        train_dataset = raw_dataset.map(tokenize_function, batched=True, remove_columns=["messages"])
+    except Exception as e:
+        print(f"Dataset loading failed (make sure to run prepare_dataset.py first): {e}")
+        train_dataset = [] 
     
     training_args = TrainingArguments(
         output_dir="./nemotron-mt-reasoning-lora",
@@ -75,10 +91,12 @@ def main():
     )
 
     print("Starting specialized MT-guided LoRA tuning...")
-    # trainer.train()
-
-    print("Saving submission LoRA adapter...")
-    # model.save_pretrained("./submission/adapter")
+    if len(train_dataset) > 0:
+        trainer.train()
+        print("Saving submission LoRA adapter...")
+        model.save_pretrained("./submission/adapter")
+    else:
+        print("Skipping training because dataset is empty.")
 
 if __name__ == "__main__":
     main()
