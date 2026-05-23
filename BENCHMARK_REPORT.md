@@ -1,7 +1,7 @@
 # MT-LNN 增强启发式推理大模型评测与技术报告
 
 ## 1. 摘要 (Abstract)
-本报告针对本次黑客松比赛，展示了基于 `nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-BF16` (300亿参数) 结合独创的 **MT-LNN (多轮逻辑神经网络损失函数)** 微调方案的技术验证与性能评估。
+本报告针对本次黑客松比赛，展示了基于 `nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-BF16` (300亿参数) 结合独创的 **MT-LNN (Microtubule-Inspired Liquid Neural Network, 基于微管启发的液态神经网络)** 微调方案的技术验证与性能评估。
 本项目致力于解决极高参数量多模态推理大模型在算力受限环境下的微调痛点，并通过引入物理启发的 MT-LNN 损失惩罚逻辑断层，显著增强零样本/多步推理（Heuristic Reasoning）能力。
 
 ## 2. 核心架构与模型优化
